@@ -1,4 +1,19 @@
 module SIMD
+
+# A note on Val{} vs. Val():
+#
+# For historic reasoons, SIMD's API accepted compile-time constants as
+# Val{N} instead of Val(N). The difference is that Val{N} is a type
+# (Type{Val{N}}), whereas Val(N) is a value (of type Val{N}). This is
+# against the intent of how Val is designed, and is also much slower
+# at run time unless functions are either @inline'd or @generated.
+#
+# The API has now been cleaned up. To preserve backward compatibility,
+# passing Val{N} instead of Val(N) is still supported. It might go
+# away at the next major release.
+
+
+
 #=
 
 # Various boolean types
@@ -180,6 +195,8 @@ end
 
 Base.zero(::Type{Vec{N,T}}) where {N,T} = Vec{N,T}(zero(T))
 Base.one(::Type{Vec{N,T}}) where {N,T} = Vec{N,T}(one(T))
+Base.zero(::Vec{N,T}) where {N,T} = zero(Vec{N,T})
+Base.one(::Vec{N,T}) where {N,T} = one(Vec{N,T})
 
 # Floating point formats
 
@@ -909,6 +926,11 @@ for op in (:(==), :(!=), :(<), :(<=), :(>), :(>=))
         @inline Base.$op(v1::Vec{N,T}, v2::Vec{N,T}) where {N,T} =
             llvmwrap(Val($(QuoteNode(op))), v1, v2, Bool)
     end
+end
+@inline function Base.cmp(v1::Vec{N,T}, v2::Vec{N,T}) where {N,T}
+    I = int_type(T)
+    vifelse(isequal(v1, v2), Vec{N,I}(0),
+            vifelse(isless(v1, v2), Vec{N,I}(-1), Vec{N,I}(1)))
 end
 @inline function Base.isfinite(v1::Vec{N,T}) where {N,T<:FloatingTypes}
     U = uint_type(T)

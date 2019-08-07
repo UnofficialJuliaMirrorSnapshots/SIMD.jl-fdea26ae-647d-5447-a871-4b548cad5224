@@ -5,12 +5,18 @@ Explicit SIMD vectorization in Julia
 [![Build Status](https://travis-ci.org/eschnett/SIMD.jl.svg?branch=master)](https://travis-ci.org/eschnett/SIMD.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/xwaa3hm5wkiqrc54/branch/master?svg=true)](https://ci.appveyor.com/project/eschnett/simd-jl/branch/master)
 [![codecov.io](https://codecov.io/github/eschnett/SIMD.jl/coverage.svg?branch=master)](https://codecov.io/github/eschnett/SIMD.jl?branch=master)
-[![Dependency Status](https://dependencyci.com/github/eschnett/SIMD.jl/badge)](https://dependencyci.com/github/eschnett/SIMD.jl)
-[![DOI](https://zenodo.org/badge/50004500.svg)](https://zenodo.org/badge/latestdoi/50004500)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3355421.svg)](https://doi.org/10.5281/zenodo.3355421)
 
 ## Overview
 
-This package allows programmers to explicitly SIMD-vectorize their Julia code. Ideally, the compiler (Julia and LLVM) would be able to do this automatically, especially for straightforwardly written code. In practice, this does not always work (for a variety of reasons), and the programmer is often left with uncertainty as to whether the code was actually vectorized. It is usually necessary to look at the generated machine code to determine whether the compiler actually vectorized the code.
+This package allows programmers to explicitly SIMD-vectorize their
+Julia code. Ideally, the compiler (Julia and LLVM) would be able to do
+this automatically, especially for straightforwardly written code. In
+practice, this does not always work (for a variety of reasons), and
+the programmer is often left with uncertainty as to whether the code
+was actually vectorized. It is usually necessary to look at the
+generated machine code to determine whether the compiler actually
+vectorized the code.
 
 By exposing SIMD vector types and corresponding operations, the programmer can explicitly vectorize their code. While this does not guarantee that the generated machine code is efficient, it relieves the compiler from determining whether it is legal to vectorize the code, deciding whether it is beneficial to do so, and rearranging the code to synthesize vector instructions.
 
@@ -123,7 +129,7 @@ Example:
 a = Vec{4, Int32}((1,2,3,4))
 b = Vec{4, Int32}((5,6,7,8))
 mask = (2,3,4,5)
-shufflevector(a, b, Val{mask})
+shufflevector(a, b, Val(mask))
 <4 x Int32>[3, 4, 5, 6]
 ```
 The mask specifies vector elements counted across `a` and `b`,
@@ -132,13 +138,13 @@ some of the values in the result vector, you can use the symbol
 `:undef`. `a` and `b` must be of the same SIMD vector type. The
 result will be a SIMD vector with the same element type as `a` and `b`
 and the same length as the mask. The function must be specialized on
-the value of the mask, therefore the `Val{}` construction in the call.
+the value of the mask, therefore the `Val()` construction in the call.
 
 There is also a one operand version of the function:
 ```Julia
 a = Vec{4, Int32}((1,2,3,4))
 mask = (0,3,1,2)
-shufflevector(a, Val{mask})
+shufflevector(a, Val(mask))
 <4 x Int32>[1, 4, 2, 3]
 ```
 
@@ -158,7 +164,7 @@ Thus, implementing SIMD operations in Julia is in principle a straightforward ap
 function +(x::Float64x4, y::Float64x4)
     llvmcall("""
         %res = fadd <4 x double> %0, %1
-        return <4 x double> %res
+        ret <4 x double> %res
         """, Float64x4, Tuple{Float64x4, Float64x4}, x, y)
 end
 ```
